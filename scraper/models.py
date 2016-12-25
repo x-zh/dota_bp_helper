@@ -59,7 +59,7 @@ class Hero(models.Model):
 
 
 class MatchPlayer(models.Model):
-    match = models.ForeignKey(Match)
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)
     player = models.ForeignKey(Player, null=True)
     hero = models.ForeignKey(Hero, null=True)
 
@@ -95,4 +95,11 @@ class MatchPlayer(models.Model):
 
     class Meta:
         unique_together = (('player', 'match'),)
+
+class AbilityUpgrade(models.Model):
+    match_player = models.ForeignKey(MatchPlayer, on_delete=models.CASCADE)
+
+    level = models.IntegerField(default = 0)
+    ability = models.IntegerField(default = 0)
+    time = models.IntegerField(default = 0)
 

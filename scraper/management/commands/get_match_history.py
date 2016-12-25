@@ -97,6 +97,14 @@ class Command(BaseCommand):
                 mp.tower_damage = int(data.get('tower_damage', 0))
                 mp.xp_per_min = int(data.get('xp_per_min', 0))
                 mp.save()
+
+                if 'ability_upgrades' in data:
+                    for au_data in data['ability_upgrades']:
+                        mp.abilityupgrade_set.create(
+                            level = int(au_data.get('level', 0)),
+                            ability = int(au_data.get('ability', 0)),
+                            time = int(au_data.get('time', 0))
+                        )
             return mp
         except:
             self.puts(self.style.ERROR(data))
