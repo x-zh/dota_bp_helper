@@ -63,41 +63,73 @@ class Command(BaseCommand):
         return h[0]
 
     def dump_match_player(self, match, data):
-        player = self.dump_player(data)
-        mp, c = MatchPlayer.objects.get_or_create(
-                match = match, player = player)
-        if c:
-            mp.hero = self.dump_hero(data)
-            mp.player_slot = data['player_slot']
-            mp.save()
-        return mp
+        try:
+            player = self.dump_player(data)
+            mp, c = MatchPlayer.objects.get_or_create(
+                    match = match, player = player)
+            if c:
+                mp.hero = self.dump_hero(data)
+                mp.player_slot = int(data.get('player_slot', 0))
+                mp.assists = int(data.get('assists', 0))
+                mp.backpack_0 = int(data.get('backpack_0', 0))
+                mp.backpack_1 = int(data.get('backpack_1', 0))
+                mp.backpack_2 = int(data.get('backpack_2', 0))
+                mp.deaths = int(data.get('deaths', 0))
+                mp.denies = int(data.get('denies', 0))
+                mp.gold = int(data.get('gold', 0))
+                mp.gold_per_min = int(data.get('gold_per_min', 0))
+                mp.gold_spent = int(data.get('gold_spent', 0))
+                mp.hero_damage = int(data.get('hero_damage', 0))
+                mp.hero_healing = int(data.get('hero_healing', 0))
+                mp.item_0 = int(data.get('item_0', 0))
+                mp.item_1 = int(data.get('item_1', 0))
+                mp.item_2 = int(data.get('item_2', 0))
+                mp.item_3 = int(data.get('item_3', 0))
+                mp.item_4 = int(data.get('item_4', 0))
+                mp.item_5 = int(data.get('item_5', 0))
+                mp.kills = int(data.get('kills', 0))
+                mp.last_hits = int(data.get('last_hits', 0))
+                mp.leaver_status = int(data.get('leaver_status', 0))
+                mp.level = int(data.get('level', 0))
+                mp.scaled_hero_damage = int(data.get('scaled_hero_damage', 0))
+                mp.scaled_hero_healing = int(data.get('scaled_hero_healing', 0))
+                mp.scaled_tower_damage = int(data.get('scaled_tower_damage', 0))
+                mp.tower_damage = int(data.get('tower_damage', 0))
+                mp.xp_per_min = int(data.get('xp_per_min', 0))
+                mp.save()
+            return mp
+        except:
+            self.puts(self.style.ERROR(data))
+            raise
 
     def dump_match(self, data):
         m, c = Match.objects.get_or_create(match_id = data['match_id'])
         if c:
             m.match_seq_num = data['match_seq_num']
             m.start_time = data['start_time']
-            m.lobby_type = int(data['lobby_type'])
+            m.lobby_type = int(data.get('lobby_type', 0))
 
+            m.barracks_status_dire = int(data.get('barracks_status_dire', 0))
+            m.barracks_status_radiant = int(data.get('barracks_status_radiant', 0))
+            m.cluster = int(data.get('cluster', 0))
+            m.dire_score = int(data.get('dire_score', 0))
+            m.duration = int(data.get('duration', 0))
+            m.engine = int(data.get('engine', 0))
+            m.first_blood_time = int(data.get('first_blood_time', 0))
+            m.flags = int(data.get('flags', 0))
+            m.game_mode = int(data.get('game_mode', 0))
+            m.human_players = int(data.get('human_players', 0))
+            m.leagueid = int(data.get('leagueid', 0))
+            m.negative_votes = int(data.get('negative_votes', 0))
+            m.positive_votes = int(data.get('positive_votes', 0))
+            m.radiant_score = int(data.get('radiant_score', 0))
+            m.radiant_win = bool(data.get('radiant_win', 0))
+            m.tower_status_dire = int(data.get('tower_status_dire', 0))
+            m.tower_status_radiant = int(data.get('tower_status_radiant', 0))
+
+            # seems like a deprecated field?
             if 'season' in data:
-                m.season = int(data['season'])
-            m.radiant_win = data['radiant_win']
-            m.duration = int(data['duration'])
-            m.tower_status_radiant = int(data['tower_status_radiant'])
-            m.tower_status_dire = int(data['tower_status_dire'])
-            m.barracks_status_radiant = int(data['barracks_status_radiant'])
-            m.barracks_status_dire = int(data['barracks_status_dire'])
-            m.cluster = int(data['cluster'])
-            m.first_blood_time = int(data['first_blood_time'])
-            m.human_players = int(data['human_players'])
-            m.leagueid = int(data['leagueid'])
-            m.positive_votes = int(data['positive_votes'])
-            m.negative_votes = int(data['negative_votes'])
-            m.game_mode = int(data['game_mode'])
-            m.flags = int(data['flags'])
-            m.engine = int(data['engine'])
-            m.radiant_score = int(data['radiant_score'])
-            m.dire_score = int(data['dire_score'])
+                m.season = int(data.get('season', 0))
 
             m.save()
 
