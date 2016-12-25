@@ -78,6 +78,27 @@ class Command(BaseCommand):
             m.match_seq_num = data['match_seq_num']
             m.start_time = data['start_time']
             m.lobby_type = int(data['lobby_type'])
+
+            if 'season' in data:
+                m.season = int(data['season'])
+            m.radiant_win = data['radiant_win']
+            m.duration = int(data['duration'])
+            m.tower_status_radiant = int(data['tower_status_radiant'])
+            m.tower_status_dire = int(data['tower_status_dire'])
+            m.barracks_status_radiant = int(data['barracks_status_radiant'])
+            m.barracks_status_dire = int(data['barracks_status_dire'])
+            m.cluster = int(data['cluster'])
+            m.first_blood_time = int(data['first_blood_time'])
+            m.human_players = int(data['human_players'])
+            m.leagueid = int(data['leagueid'])
+            m.positive_votes = int(data['positive_votes'])
+            m.negative_votes = int(data['negative_votes'])
+            m.game_mode = int(data['game_mode'])
+            m.flags = int(data['flags'])
+            m.engine = int(data['engine'])
+            m.radiant_score = int(data['radiant_score'])
+            m.dire_score = int(data['dire_score'])
+
             m.save()
 
             for i in data['players']:
