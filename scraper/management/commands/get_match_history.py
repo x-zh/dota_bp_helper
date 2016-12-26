@@ -35,7 +35,6 @@ class Command(BaseCommand):
         self.puts(self.style.SUCCESS('Done'))
 
     def fetch_next(self):
-        # what's next
         prev_e = Execution.objects \
                 .filter(next_execution__isnull = True) \
                 .exclude(next_start_at_match_seq_num = 0) \
@@ -44,8 +43,19 @@ class Command(BaseCommand):
 
         if prev_e:
             start_at_match_seq_num = prev_e.next_start_at_match_seq_num + 1
-            res = self.api.get_match_history_by_seq_num(
-                    start_at_match_seq_num = start_at_match_seq_num)
+            res = None
+            for retry in range(5):
+                try:
+                    # this could fail because the network condition
+                    # or rate limiting, retry 5 times
+                    res = self.api.get_match_history_by_seq_num(
+                            start_at_match_seq_num = start_at_match_seq_num)
+                except ValueError:
+                    time.sleep(3)
+                    continue
+                break
+            if not res:
+                raise ValueError('something wrong in the api call')
             e = self.dump(res, start_at_match_seq_num)
             prev_e.next_execution = e
             prev_e.save()
