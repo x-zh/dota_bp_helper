@@ -1,6 +1,7 @@
 import dota2api
 import json
-
+import time
+from datetime import datetime
 from django.core.management.base import BaseCommand
 from scraper.models import *
 
@@ -19,7 +20,13 @@ class Command(BaseCommand):
 
         # continue with next_execution
         for i in range(options['n']):
+            start_time = datetime.now()
             self.fetch_next()
+            end_time = datetime.now()
+            time_diff = (end_time - start_time).seconds
+            # time.sleep(time_diff)
+            self.puts(self.style.SUCCESS(
+                '%d00 matches in %d seconds' % (i + 1, time_diff)))
 
         self.puts(self.style.SUCCESS('Done'))
 
@@ -143,6 +150,7 @@ class Command(BaseCommand):
 
             for i in data['players']:
                 self.dump_match_player(m, i)
+
         return m
 
     def dump_execution(self, res, start_at_match_seq_num = 0):
@@ -159,12 +167,8 @@ class Command(BaseCommand):
             e.next_execution = e
 
         e.save()
-
-        self.puts('start_at: %d' % e.start_at_match_seq_num)
-        self.puts('next: %d' % e.next_start_at_match_seq_num)
-
         return e
 
     def puts(self, message, ending = None):
-        self.stdout.write(message, ending)
+        self.stdout.write(message, ending = ending)
 
