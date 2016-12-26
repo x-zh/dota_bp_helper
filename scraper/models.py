@@ -5,7 +5,6 @@ from django.db import models
 # Create your models here.
 class Execution(models.Model):
     start_at_match_seq_num = models.BigIntegerField(default = 0)
-    raw_response = models.TextField()
 
     next_start_at_match_seq_num = models.BigIntegerField(default = 0)
     next_execution = models.ForeignKey('Execution', null = True)

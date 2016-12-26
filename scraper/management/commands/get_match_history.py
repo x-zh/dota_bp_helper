@@ -159,7 +159,6 @@ class Command(BaseCommand):
     def dump_execution(self, res, start_at_match_seq_num = 0):
         e = Execution()
         e.start_at_match_seq_num = start_at_match_seq_num
-        e.raw_response = json.dumps(res)
         e.save()
 
         match_seq_num = [x['match_seq_num'] for x in res['matches']]
