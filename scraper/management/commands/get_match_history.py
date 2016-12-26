@@ -121,7 +121,7 @@ class Command(BaseCommand):
             if 'account_id' in data and data['account_id'] in self.players:
                 player = self.players[data['account_id']]
             hero = None
-            if 'hero_id' in data and data['hero_id'] in self.players:
+            if 'hero_id' in data and data['hero_id'] in self.heros:
                 hero = self.heros[data['hero_id']]
 
             mp = MatchPlayer(
