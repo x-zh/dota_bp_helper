@@ -15,6 +15,10 @@ class Command(BaseCommand):
         # init api client
         self.api = dota2api.Initialise()
 
+        # in-mem caches
+        self.heros = {}
+        self.players = {}
+
         if not self.api:
             return False
 
@@ -54,74 +58,122 @@ class Command(BaseCommand):
 
     def dump(self, res, start_at_match_seq_num = 0):
         e = self.dump_execution(res, start_at_match_seq_num)
+
+        self.dump_players(res['matches'])
+        self.dump_heros(res['matches'])
+
         for data in res['matches']:
             self.dump_match(data)
+
         return e
 
+    def dump_players(self, data):
+        account_ids = set()
+        for i in data:
+            account_ids |= set([x.get('account_id') for x in i['players']])
+        account_ids -= set([None,])
 
-    def dump_player(self, data):
-        if 'account_id' not in data:
-            return None
-        p = Player.objects.get_or_create(account_id = data['account_id'])
-        return p[0]
+        ps = Player.objects.filter(account_id__in = account_ids)
 
-    def dump_hero(self, data):
-        h = Hero.objects.get_or_create(hero_id = data['hero_id'])
-        return h[0]
+        # players already in db
+        for p in ps:
+            self.players[p.account_id] = p
 
-    def dump_match_player(self, match, data):
+        # players not in db
+        new_account_ids = account_ids - set(self.players.keys())
+        ps = []
+        for i in new_account_ids:
+            p = Player(account_id = i)
+            ps.append(p)
+        Player.objects.bulk_create(ps)
+        for p in ps:
+            self.players[p.account_id] = p
+
+        return self.players
+
+    def dump_heros(self, data):
+        hero_ids = set()
+        for i in data:
+            hero_ids |= set([x.get('hero_id') for x in i['players']])
+        hero_ids -= set([None,])
+
+        hs = Hero.objects.filter(hero_id__in = hero_ids)
+
+        # heros already in db
+        for h in hs:
+            self.heros[h.hero_id] = h
+
+        # heros not in db
+        new_hero_ids = hero_ids - set(self.heros.keys())
+        hs = []
+        for i in new_hero_ids:
+            h = Hero(hero_id = i)
+            hs.append(h)
+        Hero.objects.bulk_create(hs)
+        for h in hs:
+            self.heros[h.hero_id] = h
+
+        return self.heros
+
+    def create_match_player(self, match, data):
         try:
-            player = self.dump_player(data)
-            mp, c = MatchPlayer.objects.get_or_create(
-                    match = match, player = player)
-            if c:
-                mp.hero = self.dump_hero(data)
-                mp.player_slot = int(data.get('player_slot', 0))
-                mp.assists = int(data.get('assists', 0))
-                mp.backpack_0 = int(data.get('backpack_0', 0))
-                mp.backpack_1 = int(data.get('backpack_1', 0))
-                mp.backpack_2 = int(data.get('backpack_2', 0))
-                mp.deaths = int(data.get('deaths', 0))
-                mp.denies = int(data.get('denies', 0))
-                mp.gold = int(data.get('gold', 0))
-                mp.gold_per_min = int(data.get('gold_per_min', 0))
-                mp.gold_spent = int(data.get('gold_spent', 0))
-                mp.hero_damage = int(data.get('hero_damage', 0))
-                mp.hero_healing = int(data.get('hero_healing', 0))
-                mp.item_0 = int(data.get('item_0', 0))
-                mp.item_1 = int(data.get('item_1', 0))
-                mp.item_2 = int(data.get('item_2', 0))
-                mp.item_3 = int(data.get('item_3', 0))
-                mp.item_4 = int(data.get('item_4', 0))
-                mp.item_5 = int(data.get('item_5', 0))
-                mp.kills = int(data.get('kills', 0))
-                mp.last_hits = int(data.get('last_hits', 0))
-                mp.leaver_status = int(data.get('leaver_status', 0))
-                mp.level = int(data.get('level', 0))
-                mp.scaled_hero_damage = int(data.get('scaled_hero_damage', 0))
-                mp.scaled_hero_healing = int(data.get('scaled_hero_healing', 0))
-                mp.scaled_tower_damage = int(data.get('scaled_tower_damage', 0))
-                mp.tower_damage = int(data.get('tower_damage', 0))
-                mp.xp_per_min = int(data.get('xp_per_min', 0))
-                mp.save()
+            player = None
+            if 'account_id' in data and data['account_id'] in self.players:
+                player = self.players[data['account_id']]
+            hero = None
+            if 'hero_id' in data and data['hero_id'] in self.players:
+                hero = self.heros[data['hero_id']]
 
-                if 'ability_upgrades' in data:
-                    aus = []
-                    for au_data in data['ability_upgrades']:
-                        au = AbilityUpgrade(
-                                level = int(au_data.get('level', 0)),
-                                ability = int(au_data.get('ability', 0)),
-                                time = int(au_data.get('time', 0)),
-                                match_player = mp)
-                        aus.append(au)
-                    AbilityUpgrade.objects.bulk_create(aus)
-            return mp
+            mp = MatchPlayer(
+                    match=match,
+                    player=player,
+                    hero = hero,
+                    player_slot = int(data.get('player_slot', 0)),
+                    assists = int(data.get('assists', 0)),
+                    backpack_0 = int(data.get('backpack_0', 0)),
+                    backpack_1 = int(data.get('backpack_1', 0)),
+                    backpack_2 = int(data.get('backpack_2', 0)),
+                    deaths = int(data.get('deaths', 0)),
+                    denies = int(data.get('denies', 0)),
+                    gold = int(data.get('gold', 0)),
+                    gold_per_min = int(data.get('gold_per_min', 0)),
+                    gold_spent = int(data.get('gold_spent', 0)),
+                    hero_damage = int(data.get('hero_damage', 0)),
+                    hero_healing = int(data.get('hero_healing', 0)),
+                    item_0 = int(data.get('item_0', 0)),
+                    item_1 = int(data.get('item_1', 0)),
+                    item_2 = int(data.get('item_2', 0)),
+                    item_3 = int(data.get('item_3', 0)),
+                    item_4 = int(data.get('item_4', 0)),
+                    item_5 = int(data.get('item_5', 0)),
+                    kills = int(data.get('kills', 0)),
+                    last_hits = int(data.get('last_hits', 0)),
+                    leaver_status = int(data.get('leaver_status', 0)),
+                    level = int(data.get('level', 0)),
+                    scaled_hero_damage = int(data.get('scaled_hero_damage', 0)),
+                    scaled_hero_healing = int(data.get('scaled_hero_healing', 0)),
+                    scaled_tower_damage = int(data.get('scaled_tower_damage', 0)),
+                    tower_damage = int(data.get('tower_damage', 0)),
+                    xp_per_min = int(data.get('xp_per_min', 0)))
+            mp.save()
+            aus = []
+            if 'ability_upgrades' in data:
+                for au_data in data['ability_upgrades']:
+                    au = AbilityUpgrade(
+                            level = int(au_data.get('level', 0)),
+                            ability = int(au_data.get('ability', 0)),
+                            time = int(au_data.get('time', 0)),
+                            match_player=mp)
+                    aus.append(au)
+
+            return mp, aus
         except:
             self.puts(self.style.ERROR(data))
             raise
 
     def dump_match(self, data):
         m, c = Match.objects.get_or_create(match_id = data['match_id'])
+
         if c:
             m.match_seq_num = data['match_seq_num']
             m.start_time = data['start_time']
@@ -151,8 +203,12 @@ class Command(BaseCommand):
 
             m.save()
 
+            all_aus = []
             for i in data['players']:
-                self.dump_match_player(m, i)
+                mp, aus = self.create_match_player(m, i)
+                if mp and aus:
+                    all_aus += aus
+            AbilityUpgrade.objects.bulk_create(all_aus)
 
         return m
 

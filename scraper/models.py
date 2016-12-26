@@ -92,8 +92,6 @@ class MatchPlayer(models.Model):
 
     player_slot = models.IntegerField(default = 0)
 
-    class Meta:
-        unique_together = (('player', 'match'),)
 
 class AbilityUpgrade(models.Model):
     match_player = models.ForeignKey(MatchPlayer, on_delete=models.CASCADE)
