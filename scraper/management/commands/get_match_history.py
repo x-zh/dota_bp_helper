@@ -106,12 +106,15 @@ class Command(BaseCommand):
                 mp.save()
 
                 if 'ability_upgrades' in data:
+                    aus = []
                     for au_data in data['ability_upgrades']:
-                        mp.abilityupgrade_set.create(
-                            level = int(au_data.get('level', 0)),
-                            ability = int(au_data.get('ability', 0)),
-                            time = int(au_data.get('time', 0))
-                        )
+                        au = AbilityUpgrade(
+                                level = int(au_data.get('level', 0)),
+                                ability = int(au_data.get('ability', 0)),
+                                time = int(au_data.get('time', 0)),
+                                match_player = mp)
+                        aus.append(au)
+                    AbilityUpgrade.objects.bulk_create(aus)
             return mp
         except:
             self.puts(self.style.ERROR(data))
