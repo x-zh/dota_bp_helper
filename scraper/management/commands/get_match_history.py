@@ -5,6 +5,8 @@ from datetime import datetime
 from django.core.management.base import BaseCommand
 from scraper.models import *
 
+START_MATCH_ID = 2600000000
+
 class Command(BaseCommand):
     help = 'get latest N * 100 matches basic info'
 
@@ -62,8 +64,8 @@ class Command(BaseCommand):
             return e
         else:
             res = self.api.get_match_history_by_seq_num(
-                    start_at_match_seq_num = 2500000000)
-            e = self.dump(res, 2500000000)
+                    start_at_match_seq_num = START_MATCH_ID )
+            e = self.dump(res, START_MATCH_ID)
             return e
 
     def dump(self, res, start_at_match_seq_num = 0):
